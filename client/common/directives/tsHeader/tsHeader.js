@@ -36,8 +36,8 @@
 
 					scope.shouldOfferLogin = function () {
 						var path = $location.path();
-						return !UserService.isLoggedIn() && 
-						(path === '/' || path === '/about' || path === '/help');
+						return !UserService.isLoggedIn() //&& 
+						//(path === '/' || path === '/about' || path === '/help');
 					};
 				},
 				templateUrl: 'common/directives/tsHeader/tsHeader.html'

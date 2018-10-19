@@ -1,6 +1,6 @@
+<ts-header></ts-header>
 <section>
     <div class="container auth">
-        <a href="/home"><img src="assets/project-logo.png" alt="Home"></a>
         <div class="jumbotron formBox">
             <div ng-show="isChangingRoles" class="alert alert-warning">
                 Are you sure? Logging in as a facilitator will log out of the participant's session.
@@ -8,10 +8,10 @@
             <!-- <h2>{{!isFacilitator ? 'Participant Login' : 'Facilitator Login'}}</h2> -->
             <h2>{{role.toUpperCase()}}</h2>
             <div ng-show="error" class="alert alert-danger">{{error}}</div>
-            <div ng-show="role !== 'demo'">
+            <!---- ><div ng-show="role !== 'demo'">
                 <label>Facilitator?</label>
                 <input type="checkbox" ng-change="switchRoute()" ng-model="isFacilitator" id="role" />
-            </div>
+            </div> -->
 
             <!-- Facilitator Form -->
             <form name="fform" ng-submit="loginFacilitator()" role="form" ng-show="role === 'facilitator'" novalidate>
