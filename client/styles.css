@@ -105,6 +105,10 @@ img {
     margin: 0 auto;
 }
 
+.container img {
+    max-width: 80%;
+}
+
 .container:after {
     content: "";
     display: block;
@@ -451,7 +455,7 @@ footer a:hover {
 }
 
 .container.auth {
-    max-width: 660px;
+    /* max-width: 660px; */
     text-align: center;
 }
 
@@ -523,7 +527,7 @@ footer a:hover {
 .groups {
     background: #DFEAF3;
     min-height: 90vh;
-    max-width: 660px;
+    /* max-width: 660px; */
     margin-left: auto;
     margin-right: auto;
     margin-top: -12px;
