@@ -77,19 +77,17 @@ var Group = sequelize.define('group', {
     type: Sequelize.STRING,
     unique: true
   }
-}, {
-  instanceMethods: {
-    addPersonWithName: function (sillyname) {
-      return User.create({
-        email: null,
-        username: sillyname,
-        password: null,
-        role: 'participant',
-        groupId: this.get('id')
-      })
-    }
-  }
 })
+
+Group.prototype.addPersonWithName = function(sillyname) {
+  return User.create({
+    email: null,
+    username: sillyname,
+    password: null,
+    role: 'participant',
+    groupId: this.get('id')
+  })
+}
 
 var Session = sequelize.define('session', {
   start: Sequelize.DATE,
@@ -103,14 +101,12 @@ var Session = sequelize.define('session', {
 
 var Distribution = sequelize.define('distribution', {
   agrees: Sequelize.BOOLEAN
-}, {
-  instanceMethods: {
-    setAgreement: function (agrees) {
-      this.agrees = agrees;
-      return this.save();
-    }
-  }
-});
+})
+
+Distribution.prototype.setAgreement = function(agrees) {
+  this.agrees = agrees;
+  return this.save();
+}
 
 var GroupColor = sequelize.define('group_color', {
   name: Sequelize.STRING,
