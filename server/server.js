@@ -69,6 +69,43 @@ function makeName() {
     lastName2[getRandomInt(0, lastName2.length)];
 }
 
+function makeDemoName() {
+  var firstWord = ['Mario', 'Luigi', 'Peach', 'Toad', 'Toadette', 'Yoshi', 'Daisy', 
+       'DonkeyKong', 'Wario', 'Bowser', 'Koopa', 'Troopa', 'Metal'];
+  var secondWord1 = ['Mario', 'Luigi', 'Peach', 'Toad', 'Toadette', 'Yoshi', 'Daisy', 
+       'DonkeyKong', 'Wario', 'Bowser', 'Koopa', 'Troopa', 'Metal'];
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  return firstWord[getRandomInt(0, firstWord.length)] + 
+   secondWord1[getRandomInt(0, secondWord1.length)];  
+}
+
+function attemptDemoName(resolve, reject) {
+  var demoName = makeDemoName();
+  models.Group.findOne({
+      where: {
+        name: demoName
+      }
+    })
+    .then(function (result) {
+      if (result === null) {
+        resolve(demoName);
+      } else {
+        attemptDemoName(resolve, reject);
+      }
+    });
+}
+
+function getUniqueDemoName() {
+  var p = new Promise(function (resolve, reject) {
+    attemptDemoName(resolve, reject);
+  });
+  return p;
+}
+
 function attemptSillyname(resolve, reject) {
   var candidateName = makeName();
   models.User.findOne({
@@ -95,7 +132,6 @@ function getUniqueSillyname() {
 
 function bulkCreateParticipants(num, groupId) {
   var createResults = [];
-  // console.log("bulkCreateParticipants args: ", num, groupId)
   for (var i = 0; i < num; i++) {
     createResults.push(createParticpant(groupId));
   }
@@ -113,7 +149,6 @@ function bulkCreateParticipants(num, groupId) {
  */
 function initSession(data) {
   // TODO: Use userid to update socketid?
-  // console.log('Got into initSession with data', data)
   return new Promise(function (resolve, reject) {
     createSession(data.groupId)
       .then(function (session) {
@@ -135,7 +170,6 @@ function initSession(data) {
 }
 
 function getActiveSession(groupId, socket) {
-  // console.log('beginning getActiveSession', groupId)
   return new Promise(function (resolve, reject) {
     findGroupById(groupId)
       .then(function (group) {
@@ -149,7 +183,6 @@ function getActiveSession(groupId, socket) {
                   resolve(session);
                 });
             } else {
-              // console.log(group.getCurrentSession())
               resolve(group.getCurrentSession());
             }
           });
@@ -161,7 +194,6 @@ function getActiveSession(groupId, socket) {
 // Database Communication
 
 function findByUsername(u) {
-  // console.log('findByUsername', u)
   return models.User.findOne({
     where: {
       username: u
@@ -173,20 +205,27 @@ function findByUsername(u) {
   });
 }
 
-function findByGroup(groupName) {
-
+function findByDemoGroup(groupName) {
   return models.Group.findOne({
     where: {
-      name: groupName
+      name: groupName,
+      demo: true
     }
   });
 }
 
 function findUserById(i) {
-  // console.log('findUserById', i)
   return models.User.findOne({
     where: {
       id: i
+    }
+  });
+}
+
+function findNameByGroups(groupName, groups) {
+  return groups.findOne({
+    where: {
+      name: groupName
     }
   });
 }
@@ -217,7 +256,6 @@ function findAllGroupsByOwner(i) {
 }
 
 function findThoughts(info) {
-  // console.log('findThoughts', info)
   return models.Thought.findAll({
     where: {
       promptId: info
@@ -232,7 +270,6 @@ function findThoughts(info) {
 }
 
 function findAllActiveSockets(groupId) {
-  // console.log('findAllActiveSockets', groupId)
   return models.Socket.findAll({
     where: {
       active: true
@@ -261,7 +298,6 @@ function findAllActiveSockets(groupId) {
 // }
 
 function findSessionThoughts(sessionId, userId) {
-  console.log('findSessionThoughts', sessionId);
   return models.Thought.findAll({
     where: {
       userId: userId
@@ -278,7 +314,6 @@ function findSessionThoughts(sessionId, userId) {
 }
 
 function findCurrentPromptForGroup(sessionId) {
-  console.log('findCurrentPromptForGroup', sessionId);
   return models.Prompt.findOne({
     order: [
       ['updatedAt', 'DESC']
@@ -297,7 +332,6 @@ function findCurrentPromptForGroup(sessionId) {
 }
 
 function findGroupById(i) {
-  // console.log('findGroupById', i)
   return models.Group.findOne({
     where: {
       id: i
@@ -313,7 +347,6 @@ function findGroupById(i) {
 }
 
 function updateGroupSession(g, i) {
-  // console.log('updateGroupSession', g, i)
   return models.Group.update({
     CurrentSessionId: i
   }, {
@@ -324,7 +357,6 @@ function updateGroupSession(g, i) {
 }
 
 function createFacilitator(e, u, p) {
-  // console.log('createFacilitator', e, u, p)
   return models.User.findOne({
       where: {
         username: u
@@ -343,16 +375,15 @@ function createFacilitator(e, u, p) {
     });
 }
 
-function createGroup(n, i) {
-  // console.log('createGroup', n, i)
+function createGroup(n, i, k) {
   return models.Group.create({
-    name: n,
-    ownerId: i
+      name: n,
+      ownerId: i,
+      demo: k
   });
 }
 
 function createSession(groupId) {
-  // console.log('createSession', groupId)
   return models.Session.create({
     start: new Date(),
     groupId: groupId
@@ -360,7 +391,6 @@ function createSession(groupId) {
 }
 
 function createPrompt(c, i, g, s) {
-  // console.log('createPrompt')
   return models.Prompt.create({
     content: c,
     userId: i,
@@ -370,7 +400,6 @@ function createPrompt(c, i, g, s) {
 }
 
 function createThought(c, i, p) {
-  // console.log('createThought', c, i, p)
   return models.Thought.create({
     content: c,
     userId: i,
@@ -379,7 +408,6 @@ function createThought(c, i, p) {
 }
 
 function deleteThought(thoughtId) {
-  // console.log('deleteThought', thoughtId)
   return models.Thought.update({
     deleted: true
   }, {
@@ -390,7 +418,6 @@ function deleteThought(thoughtId) {
 }
 
 function endSession(i) {
-  // console.log('endSession', i)
   return models.Session.update({
     end: new Date()
   }, {
@@ -401,9 +428,7 @@ function endSession(i) {
 }
 
 function createParticpant(g) {
-  // console.log('createParticpant', g)
   var sillyname = makeName();
-  console.log('Creating participant with sillyname: ', sillyname);
   return models.User.create({
     email: null,
     username: sillyname,
@@ -424,7 +449,6 @@ function createDemoUser(userName,groupId) {
 }
 
 function createSocket(info) {
-  // console.log('createSocket', info)
   return models.Socket.create({
     socketioId: info.socketId,
     userId: info.userId,
@@ -433,7 +457,6 @@ function createSocket(info) {
 }
 
 function setSocketInactive(socketId) {
-  // console.log('setSocketInactive', socketId)
   return models.Socket.update({
     active: false
   }, {
@@ -446,14 +469,12 @@ function setSocketInactive(socketId) {
 // return a promise that tells the caller when all of 
 // the rooms have been left
 function leaveAllRooms(socket) {
-  // console.log('leaveAllRooms', socket)
   return Promise.all(Object.keys(socket.rooms).map(function (room) {
     return socket.leaveAsync(room);
   }));
 }
 
 function findSocketByID(socketioId) {
-  // console.log('findSocketByID', socketioId)
   return models.Socket.findOne({
     where: {
       socketioId: socketioId
@@ -474,11 +495,6 @@ function createEvent(info) {
   if (!info.hasOwnProperty('type')) {
     info.type = 'other';
   }
-  console.log(['Event Info >>',
-    '\nsocketID: ', info.socketid,
-    '\ntype: ', info.type,
-    '\ndata: ', info.data, '\n'
-  ].join(' '));
 
   return models.Event.create({
     type: info.type,
@@ -532,19 +548,23 @@ app.post('/signin', function (request, response) {
   if (!request.body.hasOwnProperty('user')) {
     response.status(400).send('Request did not contain any information.');
   } else {
-    // console.log("request body: ", request.body)
-
     if (request.body.user.role === 'demo') {
       // find the group, error out if it doesn't exist
-      findByGroup(request.body.user.group)
+      findByDemoGroup(request.body.user.group)
         .then(function(group) {
-          var groupId = group.id;
-          var username = request.body.user.username;
-          return createDemoUser(username, groupId);
-        }).then(function(user) {
-          response.status(200).json({
-            user: user
-          });
+          if (group != null) {
+            var groupId = group.id;
+            var username = request.body.user.username;
+            // return createDemoUser(username, groupId);
+            createDemoUser(username, groupId)
+            .then(function(user) {
+              response.status(200).json({
+                user: user
+              });
+            });
+          } else {
+            response.status(401).send('Did not find demo group name.');
+          }
         })
       // create a new user as part of that group, using a randomly generated username
       // set the user role to "demo"
@@ -606,7 +626,6 @@ app.post('/signup', function (request, response) {
       })
       .catch(function (err) {
         console.error('>> Error in signup: ', err);
-        // console.log("Error creating account.", err.errors[0].message)
         response.status(500).json({
           message: 'Error creating account: ' + err.errors[0].message[0].toUpperCase() + err.errors[0].message.slice(1),
           error: err
@@ -653,20 +672,26 @@ app.post('/groups/create', function (request, response) {
   if (!request.body.hasOwnProperty('group')) {
     response.status(400).send('Request did not contain any information.');
   } else {
-    createGroup(request.body.group.name,
-        request.body.group.owner)
-      .then(function (group) {
-        // TODO: Log this in the events table
-        bulkCreateParticipants(request.body.group.numParticipants,
-            group.get('id'))
-          .then(function (group) {
-            // console.log("Group Created: ", group)
-            response.status(200).json({
-              group: group
+    findAllGroupsByOwner(request.body.group.owner)
+    .then(function (groups) {
+      groups.find(function(gg) {
+        if (gg.name === request.body.group.name) {
+          response.status(401).send('You have a group already named', request.body.group.name);
+        }
+      });
+      createGroup(request.body.group.name,
+          request.body.group.owner, false)
+        .then(function (group) {
+          bulkCreateParticipants(request.body.group.numParticipants,
+              group.get('id'))
+            .then(function (group) {
+              response.status(200).json({
+                group: group
+              });
             });
-          });
-      })
-      .catch(function (err) {
+        })
+    })
+    .catch(function (err) {
         console.error('>> Error in create group: ', err);
         response.status(500).send('Error creating group');
       });
@@ -685,7 +710,6 @@ app.use('*', express.static(__dirname + '/../client/index.html'));
 io.on('connection', function (socket) {
   var address = socket.request.connection._peername;
   // var address = socket.handshake.address;
-  console.log('New connection from ' + address.address);
   Promise.promisifyAll(socket);
   socket.emit('socket-id', socket.id);
   createEvent({
@@ -724,11 +748,8 @@ io.on('connection', function (socket) {
         return getActiveSession(data.groupId, socket);
       })
       .then(function (session) {
-        console.log('active session in fac-join');
-        console.log(session);
         return findCurrentPromptForGroup(session.get('id'))
           .then(function (defaultPrompt) {
-            console.log(defaultPrompt);
             getGroupColors()
               .then(function (colors) {
                 socket.emit('group-colors', colors);
@@ -741,7 +762,6 @@ io.on('connection', function (socket) {
               prompt: defaultPrompt
             };
 
-            console.log('about to io.emit', room, message, messageData);
 
             // why shouldn't this only talk to the socket that has just joined?
             io.to(room).emit(message, messageData);
@@ -757,7 +777,6 @@ io.on('connection', function (socket) {
   });
 
   socket.on('facilitator-leave', function (socketId) {
-    // console.log('marking inactive', socketId)
     setSocketInactive(socketId);
   });
 
@@ -787,7 +806,6 @@ io.on('connection', function (socket) {
     findGroupById(data.groupId)
       .then(function (group) {
         if (group.get('CurrentSessionId') !== null) {
-          // console.log("Recieved request for new session")
           endSession(group.get('CurrentSessionId'));
         }
         initSession({
@@ -821,9 +839,6 @@ io.on('connection', function (socket) {
         findThoughts(data.promptId)
       ])
       .then(function (results) {
-        // console.log('promise.all in distribute')
-        // console.log(results.length)
-        // console.log(results)
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
         // Returns a random integer between min (included) and max (excluded)
         // Using Math.round() will give you a non-uniform distribution!
@@ -833,12 +848,6 @@ io.on('connection', function (socket) {
 
         var activeSockets = shuffle(results[1]); // active users
         var thoughts = shuffle(results[2]);
-
-        // console.log('activeSockets')
-        // console.log(activeSockets)
-
-        // console.log('thoughts')
-        // console.log(thoughts)
 
         var thoughtsLength = thoughts.length;
 
@@ -850,7 +859,7 @@ io.on('connection', function (socket) {
             thoughts.push(thoughts[getRandomInt(0, thoughtsLength)]);
           }
         }
-        // console.log(results)
+
 
         // need to make 2 dicts:
         // 1. thought by author id
@@ -859,7 +868,6 @@ io.on('connection', function (socket) {
         // populating "thoughtsAuthors" array with every item in "thoughts"
         var thoughtsAuthors = [];
         thoughts.forEach(function (thought) {
-          // console.log(thought)
           thoughtsAuthors.push(thought);
         });
 
@@ -867,12 +875,10 @@ io.on('connection', function (socket) {
         var socketsByUId = {}; 
 
         activeSockets.forEach(function (connectedSocket) {
-          // console.log(connectedSocket)
           presenters.push(connectedSocket.get('userId'));
           socketsByUId[connectedSocket.get('userId')] = connectedSocket;
         });
 
-        // console.log(presenters, thoughtsAuthors)
         // via http://stackoverflow.com/a/6274381/3850442
         function shuffle(o) {
           for (var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x)
@@ -884,26 +890,19 @@ io.on('connection', function (socket) {
         // right now i think the distribution is fairly regular and people 
         // will probably always get the same other person's thought
         function possibleMatches(thoughts, thoughtPresenters) {
-          // console.log('possibleMatches')
-          // console.log(thoughtAuthors.length)
-          // console.log(thoughtPresenters.length)
           var edges = [];
           for (var i = 0; i < thoughts.length; i++) {
             for (var j = 0; j < thoughtPresenters.length; j++) {
-              // console.log(thoughtAuthors[i], thoughtPresenters[j])
 
               // checking the thought is not from the author of that thought
               if (thoughts[i].get('userId') !== thoughtPresenters[j]) {
                 edges.push([i, j]);
-                // console.log([i,j])
               }
             }
           }
-          // console.log('possible matches', edges)
           // shuffle(edges)
           return edges;
         }
-        // console.log(possibleMatches(3,4))
 
         // let m represent the number of connected potential readers, 
         // and let n rep the number of submitted thoughts
@@ -912,10 +911,8 @@ io.on('connection', function (socket) {
         // }
 
         var potentialMatches = possibleMatches(thoughtsAuthors, presenters);
-        // console.log('potential matches', potentialMatches)
 
         var distribution = findMatching(thoughtsAuthors.length, presenters.length, potentialMatches);
-        // console.log('distribution', distribution)
 
         function formatDistribution(distribution) {
           return distribution.map(function (pairing) {
@@ -933,7 +930,6 @@ io.on('connection', function (socket) {
         });
 
         distribution.forEach(function (pairing) {
-          // console.log('currrent pairing', pairing)
           var thoughtToSendIndex = pairing[0];
           var presenterToReceive = pairing[1];
           var presenterSocketIdx = presenters[presenterToReceive];
@@ -941,7 +937,6 @@ io.on('connection', function (socket) {
           var thoughtAuthorForSending = thoughtsAuthors[thoughtToSendIndex];
           var thoughtContent = thoughtAuthorForSending.get('content');
 
-          // console.log('current group', thoughtAuthorForSending.get('user').get('groupId'))
 
           createDistribution({
               recipient: presenterSocketIdx,
@@ -949,8 +944,6 @@ io.on('connection', function (socket) {
               group: thoughtAuthorForSending.get('user').get('groupId')
             })
             .then(function (newDistribution) {
-              // console.log('created distribution')
-              // console.log(newDistribution.get('id'))
 
               // it's possible someone has disconnected. don't friggin die if they did!
               if (typeof io.sockets.connected[socketIdOfReceipient] !== 'undefined') {
@@ -976,7 +969,6 @@ io.on('connection', function (socket) {
    * @param: INT groupId - The db id of the group said participant belongs to
    */
   socket.on('participant-join', function (data) {
-    console.log('participant-join', data);
 
     getGroupColors()
       .then(function (colors) {
@@ -993,13 +985,11 @@ io.on('connection', function (socket) {
       .then(function () {
         getActiveSession(data.groupId, socket)
           .then(function (session) {
-            // console.log("Active Session:", session)
             // End last session?
 
             // get current prompt
             findCurrentPromptForGroup(session.get('id'))
               .then(function (defaultPrompt) {
-                console.log('found current prompt', defaultPrompt.id, defaultPrompt.content);
                 var room = 'discussion-' + data.groupId;
                 var message = 'sessionsyncres';
                 var messageData = {
@@ -1045,16 +1035,12 @@ io.on('connection', function (socket) {
                             type: models.sequelize.QueryTypes.SELECT
                           }).then(function (unusedThoughtIds) {
                           if (unusedThoughtIds && unusedThoughtIds.length > 0) {
-                            console.log('unusedThoughtIds if');
-                            console.log(unusedThoughtIds);
                             return createDistribution({
                                 recipient: data.userId,
                                 thought: unusedThoughtIds[0].id,
                                 group: data.groupId
                               })
                               .then(function (newDistribution) {
-                                console.log('created distribution');
-                                console.log(newDistribution.get('id'));
                                 socket.emit('distributed-thought', {
                                   id: unusedThoughtIds[0].id,
                                   content: unusedThoughtIds[0].content,
@@ -1062,7 +1048,6 @@ io.on('connection', function (socket) {
                                 });
                               });
                           } else {
-                            console.log('unusedThoughtIds else');
                             // all thoughts are distributed, just pick one that's not mine
                             return models.Thought.findOne({
                               where: {
@@ -1078,8 +1063,6 @@ io.on('connection', function (socket) {
                                   group: data.groupId
                                 })
                                 .then(function (newDistribution) {
-                                  console.log('created distribution');
-                                  console.log(newDistribution.get('id'));
                                   socket.emit('distributed-thought', {
                                     id: thoughtToDist.id,
                                     content: thoughtToDist.content,
@@ -1137,7 +1120,6 @@ io.on('connection', function (socket) {
    * @param: STRING content - user-given thought to be broadcast to facilitator
    */
   socket.on('new-thought', function (newThought) {
-    // console.log(newThought)
     createThought(newThought.content, newThought.author.id, newThought.promptId)
       .then(function (thought) {
         socket.broadcast.to('facilitator-' + newThought.author.groupId)
@@ -1152,7 +1134,6 @@ io.on('connection', function (socket) {
     // chosenInfo has keys: thoughtId, thoughtGroupId, groupId
     // get the groupID for this class
     // then
-    console.log('choose-group', chosenInfo);
     if (chosenInfo.hasOwnProperty('thoughtId') &&
       chosenInfo.hasOwnProperty('distId') &&
       chosenInfo.hasOwnProperty('thoughtGroupId') &&
@@ -1176,8 +1157,18 @@ io.on('connection', function (socket) {
     createEvent(info);
   });
 
+  socket.on('add-demo-group', function (ownerId) {
+    getUniqueDemoName()
+      .then(function (uniqueDemoName) {
+        createGroup(uniqueDemoName,
+          ownerId, true)
+        .then(function (newDemoGroup) {
+          socket.emit('added-new-demo-group', newDemoGroup);
+        });
+      });
+  });
+
   socket.on('add-person', function (group) {
-    console.log('add-person', group.id);
     getUniqueSillyname()
       .then(function (uniqueSillyName) {
         return models.Group.findById(group.id)
@@ -1198,12 +1189,18 @@ io.on('connection', function (socket) {
   }
 
   socket.on('agree', function (distributedThought) {
-    console.log(distributedThought);
     setAgreement(distributedThought.distId, true);
   });
 
   socket.on('disagree', function (distributedThought) {
-    console.log(distributedThought);
     setAgreement(distributedThought.distId, false);
   });
+
+  // Audio functionality
+  socket.on('new-audio-stream', function(stream) {
+    console.log('Group ID: ' + stream.groupId + '\t' + 
+      'Session ID: ' + stream.sessionId + '\t' +
+      'Volume: ' + stream.volumeValue);
+  });
 });
+

@@ -73,10 +73,8 @@ var Prompt = sequelize.define('prompt', {
 })
 
 var Group = sequelize.define('group', {
-  name: { 
-    type: Sequelize.STRING,
-    unique: true
-  }
+  name: Sequelize.STRING,
+  demo: Sequelize.BOOLEAN
 })
 
 Group.prototype.addPersonWithName = function(sillyname) {
@@ -175,7 +173,7 @@ exports.sequelize = sequelize
 
 exports.start = function () {
   return sequelize.sync({
-      force: DROPTABLES
+      force: false
     }) // Use {force:true} only for updating the above models,
     // it drops all current data
     .then(function () {
@@ -208,7 +206,8 @@ exports.start = function () {
       return Group.findOrCreate({
           where: {
             name: 'My Test Group',
-            ownerId: userResults[0].dataValues.id
+            ownerId: userResults[0].dataValues.id,
+            demo: false
           }
         })
         .then(function (group) {
@@ -250,7 +249,8 @@ exports.start = function () {
           return Group.findOrCreate({
               where: {
                 name: 'My Other Test Group',
-                ownerId: userResults[0].dataValues.id
+                ownerId: userResults[0].dataValues.id,
+                demo: false
               }
             })
             .then(function (group) {

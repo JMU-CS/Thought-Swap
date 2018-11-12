@@ -98,7 +98,8 @@
                             if (groups.length === 1) {
                                 $location.path('/facilitator/' + groups[0].id);
                             } else {
-                                $location.path('/facilitator/mgmt');
+                                // $location.path('/facilitator/mgmt');
+                                $location.path('/:username/:groupId');
                             }
                         });
                     Logger.createEvent({

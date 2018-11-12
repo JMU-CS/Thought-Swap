@@ -28,7 +28,7 @@
                         <span class="sr-only">Toggle Dropdown</span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li ng-if="userService.isFacilitator()"><a href="/facilitator/mgmt">Group Management</a></li>
+                        <li ng-if="userService.isFacilitator()"><a href="/{{userService.user.username}}/mgmt">Group Management</a></li>
                         <br ng-if="userService.isFacilitator()">
                         <li id="logout">
                             <a href="" ng-click="logOut()">Logout

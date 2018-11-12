@@ -27,7 +27,8 @@
                     password: $scope.password
                 })
                 .then(function () {
-                    $location.path('/facilitator/mgmt');
+                    // $location.path('/facilitator/mgmt');
+                    $location.path('/:username/::groupId');
                     Logger.createEvent({
                         data: $scope.username + ' successfully registered',
                         type: 'register'

@@ -6,6 +6,10 @@
         <button ng-click="createGroup()" class="pull-right btn sml yellow" id="createBtn">
                 New Group
         </button> 
+        <button ng-click="addDemoGroup($event)" class="pull-right btn sml yellow" id="createBtn">
+            Demo Group
+        </button>
+        <br>
         <div class="text-center">
             <img class="loadIcon" ng-if="dataLoading && groups === null" src="assets/img/loading.gif" />
         </div> <br>
@@ -16,7 +20,8 @@
             <div uib-accordion-group class="panel-default" ng-repeat="group in groups" is-open="group.isOpen">
                 <uib-accordion-heading>
                     <div ng-click="expand($index)">
-                        <a ng-href="/facilitator/{{group.id}}" ng-click="nav($event)">
+                        <!-- <a ng-href="/facilitator/{{group.id}}" ng-click="nav($event)"> -->
+                        <a ng-href="/{{userService.user.username}}/{{group.id}}" ng-click="nav($event)">
                             <strong> <i class="fa fa-comments"></i>
                                 <span class="group-name">{{group.name}}</span>
                             </strong> 

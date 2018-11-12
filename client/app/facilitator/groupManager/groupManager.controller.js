@@ -31,6 +31,8 @@
 
         })();
 
+        $scope.userService = UserService;
+
         $scope.createGroup = function () {
             var modalInstance = $modal.open({
                 animation: true,
@@ -44,7 +46,7 @@
             });
 
             modalInstance.result.then(function (group) {
-                $scope.groups.push(group);
+                $scope.groups.unshift(group);
             });
         };
 
@@ -70,6 +72,12 @@
             $event.stopPropagation();
         };
 
+        $scope.addDemoGroup = function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            ThoughtSocket.emit('add-demo-group', UserService.user.id);
+        }
+
         $scope.addPerson = function (group, event) {
             console.log('add person');
             console.log(group);
@@ -79,11 +87,15 @@
             ThoughtSocket.emit('add-person', group);
         };
 
+        ThoughtSocket.on('added-new-demo-group', function (newDemoGroup) {
+            $scope.groups.unshift(newDemoGroup);
+        })
+
         ThoughtSocket.on('added-new-person', function (newParticipant) {
             console.log('added-new-person', newParticipant);
             $scope.groups.filter(function (group) {
                 return group.id === newParticipant.groupId;
-            })[0].users.push(newParticipant);
+            })[0].users.unshift(newParticipant);
         });
     } // End GroupManagerController
 

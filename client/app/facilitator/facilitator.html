@@ -5,7 +5,15 @@
       <button class="btn sml blue" ng-click="distribute()">Distribute</button>
       <button class="btn sml blue" ng-click="newSession()">New Session</button>
       <button class="btn sml blue" ng-click="openPromptInput()">New Prompt</button>
+      <button class="btn sml blue" ng-click="startRec()">Start Recording</button>
       <!--<button class="btn sml blue" ng-click="testThoughts()">Generate Thoughts</button> -->
+      <div id="meter">
+        <div id="volume">
+          <div class="label">Volume:</div>
+          <meter high="0.25" max="1" value="0"></meter>
+          <div class="value"></div>
+        </div>
+      </div>
       <br>
       <form class="form-horizontal" id="status">
         <label for="numthoughts"><i class="fa fa-comment"></i> Thoughts</label>
@@ -44,5 +52,10 @@
       </ul>
     </div>
   </div>
+  <script>
+    window.addEventListener('beforeunload', function(e) {      
+      stopRec();  
+    });
+  </script>
 
 </section>

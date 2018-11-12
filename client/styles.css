@@ -656,6 +656,30 @@ blockquote p {
   background-color: #F5F5F5;
 }
 
+.meters {
+  margin: 0 0 1em 0;
+}
+  
+.label {
+  color: #010c0e;
+  display: inline-block;
+  font-weight: 400;
+  margin: 0 0.5em 0 0;
+  width: 3.5em;
+}
+  
+.value {
+  display: inline-block;
+}
+  
+meter {
+  width: 50%;
+}
+  
+meter#volume {
+  color: #0f9d58;
+} 
+
 
 /* Media Queries */
 

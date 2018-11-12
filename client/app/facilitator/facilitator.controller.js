@@ -151,6 +151,85 @@
             $scope.sessionId = prompt.sessionId;
         });
 
+        // VolumeMeter not available to the view ($scope).
+        function VolumeMeter(context) {
+            this.context = context;
+            this.volume = 0.0;
+            this.script = context.createScriptProcessor(2048, 1, 1);
+            const that = this;
+            this.script.onaudioprocess = function(event) {
+              const input = event.inputBuffer.getChannelData(0);
+              var sum = 0.0;
+              for (var i = 0; i < input.length; ++i) {
+                sum += input[i] * input[i];
+              }
+              that.volume = Math.sqrt(sum / input.length);
+            };
+        }
+          
+        // connectToSource not available to the view ($scope).
+        VolumeMeter.prototype.connectToSource = function(stream, callback) {
+            try {
+              this.mic = this.context.createMediaStreamSource(stream);
+              this.mic.connect(this.script);
+              this.script.connect(this.context.destination);
+              if (typeof callback !== 'undefined') {
+                callback(null);
+              }
+            } catch (e) {
+              // what to do on error?
+            }
+        };
+
+        // stop not available to the view ($scope).
+        VolumeMeter.prototype.stop = function() {
+            this.mic.disconnect();
+            this.script.disconnect();
+        };
+
+        $scope.startRec = function () {
+            const volumeValue = document.querySelector('#volume meter');
+            const volumeValueDisplay = document.querySelector('#volume .value');
+
+            try {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                window.audioContext = new AudioContext();
+            } catch (e) {
+                alert('Web Audio API not supported.');
+            }
+
+            const constraints = window.constraints = {
+                audio: true,
+                video: false
+            };
+              
+            function handleSuccess(stream) {
+                window.stream = stream; 
+                const volumeMeter = window.volumeMeter = new VolumeMeter(window.audioContext);
+                volumeMeter.connectToSource(stream, function() {
+                  setInterval(() => {
+                    volumeValue.value = volumeValueDisplay.innerText =
+                      volumeMeter.volume.toFixed(2);
+                    ThoughtSocket.emit('new-audio-stream', {
+                        volumeValue: volumeValue.value,
+                        groupId: $routeParams.groupId,
+                        sessionId: $scope.sessionId
+                    });
+                  }, 200);
+                });
+            }
+
+            function handleError(error) {
+                // what to do on error?
+            }
+
+            navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+        };
+
+        $scope.stopRec = function() {
+            VolumeMeter.prototype.stop();
+        }
+
         $scope.openPromptInput = function () {
             // $scope.newSession();
             var modalInstance = $modal.open({
@@ -300,8 +379,6 @@
         $scope.sessionId = sessionId;
 
         $scope.submit = function () {
-            console.log("Submit works");
-            console.log('current user:', UserService.user);
             $modalInstance.close($scope.newPromptContent);
 
             ThoughtSocket.emit('new-prompt', {

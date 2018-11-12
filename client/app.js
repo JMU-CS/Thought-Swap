@@ -140,13 +140,23 @@
             })
 
             /* Facilitator */
-            .when('/facilitator/mgmt', {
+            // .when('/facilitator/mgmt', {
+            //     templateUrl: 'app/facilitator/groupManager/groupManager.html',
+            //     controller: 'GroupManagerController',
+            //     resolve: isFacilitator
+            // })
+            .when('/:username/mgmt', {
                 templateUrl: 'app/facilitator/groupManager/groupManager.html',
                 controller: 'GroupManagerController',
                 resolve: isFacilitator
             })
 
-            .when('/facilitator/:groupId', {
+            // .when('/facilitator/:groupId', {
+            //     templateUrl: 'app/facilitator/facilitator.html',
+            //     controller: 'FacilitatorController',
+            //     resolve: isFacilitator
+            // })
+            .when('/:username/:groupId', {
                 templateUrl: 'app/facilitator/facilitator.html',
                 controller: 'FacilitatorController',
                 resolve: isFacilitator
