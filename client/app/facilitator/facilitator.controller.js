@@ -151,6 +151,8 @@
             $scope.sessionId = prompt.sessionId;
         });
 
+        // VolumeMeter is from: 
+        // https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/volume
         // VolumeMeter not available to the view ($scope).
         function VolumeMeter(context) {
             this.context = context;
@@ -188,9 +190,9 @@
         };
 
         $scope.startRec = function () {
-            const volumeValue = document.querySelector('#volume meter');
-            const volumeValueDisplay = document.querySelector('#volume .value');
-
+            const volumeValue = document.querySelector('#volume');
+            //const volumeValueDisplay = document.querySelector('#volume .value');
+            
             try {
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
                 window.audioContext = new AudioContext();
@@ -208,8 +210,7 @@
                 const volumeMeter = window.volumeMeter = new VolumeMeter(window.audioContext);
                 volumeMeter.connectToSource(stream, function() {
                   setInterval(() => {
-                    volumeValue.value = volumeValueDisplay.innerText =
-                      volumeMeter.volume.toFixed(2);
+                    volumeValue.value = volumeMeter.volume.toFixed(2);
                     ThoughtSocket.emit('new-audio-stream', {
                         volumeValue: volumeValue.value,
                         groupId: $routeParams.groupId,
