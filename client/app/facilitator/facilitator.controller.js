@@ -191,23 +191,22 @@
 
         $scope.startRec = function () {
             const volumeValue = document.querySelector('#volume');
+            //const volumeValue = document.querySelector('#volume meter');
             //const volumeValueDisplay = document.querySelector('#volume .value');
             
             try {
-                window.AudioContext = window.AudioContext || window.webkitAudioContext;
                 window.audioContext = new AudioContext();
             } catch (e) {
                 alert('Web Audio API not supported.');
             }
 
-            const constraints = window.constraints = {
+            const constraints = {
                 audio: true,
                 video: false
             };
               
             function handleSuccess(stream) {
-                window.stream = stream; 
-                const volumeMeter = window.volumeMeter = new VolumeMeter(window.audioContext);
+                const volumeMeter = new VolumeMeter(window.audioContext);
                 volumeMeter.connectToSource(stream, function() {
                   setInterval(() => {
                     volumeValue.value = volumeMeter.volume.toFixed(2);
