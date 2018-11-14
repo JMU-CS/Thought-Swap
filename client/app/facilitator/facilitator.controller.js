@@ -153,7 +153,6 @@
 
         // VolumeMeter is from: 
         // https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/volume
-        // VolumeMeter not available to the view ($scope).
         function VolumeMeter(context) {
             this.context = context;
             this.volume = 0.0;
@@ -169,7 +168,6 @@
             };
         }
           
-        // connectToSource not available to the view ($scope).
         VolumeMeter.prototype.connectToSource = function(stream, callback) {
             try {
               this.mic = this.context.createMediaStreamSource(stream);
@@ -183,51 +181,77 @@
             }
         };
 
-        // stop not available to the view ($scope).
         VolumeMeter.prototype.stop = function() {
             this.mic.disconnect();
             this.script.disconnect();
         };
 
+        $scope.$on("$destroy", function() {
+            if ($scope.timerId) {
+                clearInterval($scope.timerId)
+                $scope.stopRec()
+            }
+        });
+
         $scope.startRec = function () {
-            const volumeValue = document.querySelector('#volume');
-            //const volumeValue = document.querySelector('#volume meter');
-            //const volumeValueDisplay = document.querySelector('#volume .value');
-            
-            try {
-                window.audioContext = new AudioContext();
-            } catch (e) {
-                alert('Web Audio API not supported.');
-            }
+            var recordtext = document.getElementById("recordButton").innerHTML; 
 
-            const constraints = {
-                audio: true,
-                video: false
-            };
-              
-            function handleSuccess(stream) {
-                const volumeMeter = new VolumeMeter(window.audioContext);
-                volumeMeter.connectToSource(stream, function() {
-                  setInterval(() => {
-                    volumeValue.value = volumeMeter.volume.toFixed(2);
-                    ThoughtSocket.emit('new-audio-stream', {
-                        volumeValue: volumeValue.value,
-                        groupId: $routeParams.groupId,
-                        sessionId: $scope.sessionId
+            if (recordtext === 'Start Recording') {
+                document.getElementById("recordButton").innerText="Stop Recording";
+                document.querySelector("#volume meter").style.display="inline";
+                document.querySelector('#volume .volumeLabel').style.display="inline";
+                
+                //const volumeValue = document.querySelector('#volume');
+                const volumeValue = document.querySelector('#volume meter');
+                
+                try {
+                    window.audioContext = new AudioContext();
+                } catch (e) {
+                    alert('Web Audio API not supported.');
+                }
+
+                const constraints = {
+                    audio: true,
+                    video: false
+                };
+                $scope.timerId = null;
+                
+                
+                function handleSuccess(stream) {
+                    $scope.volumeMeter  = new VolumeMeter(window.audioContext);
+                    $scope.volumeMeter.connectToSource(stream, function() {
+                        $scope.timerId = setInterval(() => {
+                        volumeValue.value = $scope.volumeMeter.volume.toFixed(2);
+                        ThoughtSocket.emit('new-audio-stream', {
+                            volumeValue: volumeValue.value,
+                            groupId: $routeParams.groupId,
+                            sessionId: $scope.sessionId
+                        });
+                    }, 200);
                     });
-                  }, 200);
-                });
-            }
+                }
 
-            function handleError(error) {
-                // what to do on error?
-            }
+                function handleError(error) {
+                    // what to do on error?
+                }
 
-            navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+                navigator.mediaDevices.getUserMedia(constraints).then(handleSuccess).catch(handleError);
+            } else {
+                document.getElementById("recordButton").innerText="Start Recording";
+                document.querySelector("#volume meter").style.display="none";
+                document.querySelector('#volume .volumeLabel').style.display="none";       
+                  
+                if ($scope.timerId) {
+                    clearInterval($scope.timerId)
+                    $scope.stopRec()
+                }
+
+
+            }   
         };
 
         $scope.stopRec = function() {
-            VolumeMeter.prototype.stop();
+            $scope.volumeMeter.stop();
         }
 
         $scope.openPromptInput = function () {
