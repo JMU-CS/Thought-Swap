@@ -95,12 +95,13 @@
                 .then(function (user) {
                     UserService.getGroups()
                         .then(function (groups) {
-                            if (groups.length === 1) {
-                                $location.path('/facilitator/' + groups[0].id);
-                            } else {
-                                // $location.path('/facilitator/mgmt');
-                                $location.path('/:username/:groupId');
-                            }
+                            //if (groups.length === 1) {
+                            //    $location.path('/facilitator/' + groups[0].id);
+                                //$location.path('/'+ $scope.username +'/' + groups[0].id);
+                            // } else {
+                            //     // $location.path('/facilitator/mgmt');
+                            $location.path('/' + $scope.username + '/mgmt');
+                            //}
                         });
                     Logger.createEvent({
                         data: $scope.username + ' successfully logged in',
