@@ -69,43 +69,6 @@ function makeName() {
     lastName2[getRandomInt(0, lastName2.length)];
 }
 
-function makeDemoName() {
-  var firstWord = ['Mario', 'Luigi', 'Peach', 'Toad', 'Toadette', 'Yoshi', 'Daisy', 
-       'DonkeyKong', 'Wario', 'Bowser', 'Koopa', 'Troopa', 'Metal'];
-  var secondWord1 = ['Mario', 'Luigi', 'Peach', 'Toad', 'Toadette', 'Yoshi', 'Daisy', 
-       'DonkeyKong', 'Wario', 'Bowser', 'Koopa', 'Troopa', 'Metal'];
-
-  function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
-  }
-
-  return firstWord[getRandomInt(0, firstWord.length)] + 
-   secondWord1[getRandomInt(0, secondWord1.length)];  
-}
-
-function attemptDemoName(resolve, reject) {
-  var demoName = makeDemoName();
-  models.Group.findOne({
-      where: {
-        name: demoName
-      }
-    })
-    .then(function (result) {
-      if (result === null) {
-        resolve(demoName);
-      } else {
-        attemptDemoName(resolve, reject);
-      }
-    });
-}
-
-function getUniqueDemoName() {
-  var p = new Promise(function (resolve, reject) {
-    attemptDemoName(resolve, reject);
-  });
-  return p;
-}
-
 function attemptSillyname(resolve, reject) {
   var candidateName = makeName();
   models.User.findOne({
@@ -684,19 +647,26 @@ app.post('/demogroups/create', function (request, response) {
     findGroupInOwnersGroups(request.body.group.owner, request.body.group.name)
     .then(function (group) {
       if (group === null) {
-      createGroup(request.body.group.name,
-          request.body.group.owner, true)
-        .then(function (group) {
-          bulkCreateParticipants(request.body.group.numParticipants,
-              group.get('id'))
+        findByDemoGroup(request.body.group.name)
+        .then(function (uniquegroup) {
+          if (uniquegroup === null) {
+            createGroup(request.body.group.name,
+              request.body.group.owner, true)
             .then(function (group) {
-              response.status(200).json({
-                group: group
-              });
-            });
-        })
+              bulkCreateParticipants(request.body.group.numParticipants,
+                  group.get('id'))
+                .then(function (group) {
+                  response.status(200).json({
+                    group: group
+                  });
+                });
+            })
+          } else {
+            response.status(401).send('Name in use by another facilitator.');
+          }
+        })   
       } else {
-        response.status(401).send('Group name already in use');
+        response.status(401).send('Name in use.');
       }
     })
     .catch(function (err) {
