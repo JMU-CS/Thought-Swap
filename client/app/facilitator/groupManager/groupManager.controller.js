@@ -33,6 +33,23 @@
 
         $scope.userService = UserService;
 
+        $scope.createDemoGroup = function () {
+            var modalInstance = $modal.open({
+                animation: true,
+                templateUrl: 'app/facilitator/partials/newDemoGroupModal.html',
+                controller: 'NewGroupModalController',
+                resolve: {
+                    groups: function () {
+                        return $scope.groups;
+                    }
+                }
+            });
+
+            modalInstance.result.then(function (group) {
+                $scope.groups.unshift(group);
+            });
+        };
+
         $scope.createGroup = function () {
             var modalInstance = $modal.open({
                 animation: true,
@@ -72,11 +89,11 @@
             $event.stopPropagation();
         };
 
-        $scope.addDemoGroup = function (event) {
-            event.stopPropagation();
-            event.preventDefault();
-            ThoughtSocket.emit('add-demo-group', UserService.user.id);
-        }
+        // $scope.addDemoGroup = function (event) {
+        //     event.stopPropagation();
+        //     event.preventDefault();
+        //     ThoughtSocket.emit('add-demo-group', UserService.user.id);
+        // }
 
         $scope.addPerson = function (group, event) {
             console.log('add person');
@@ -87,9 +104,9 @@
             ThoughtSocket.emit('add-person', group);
         };
 
-        ThoughtSocket.on('added-new-demo-group', function (newDemoGroup) {
-            $scope.groups.unshift(newDemoGroup);
-        })
+        // ThoughtSocket.on('added-new-demo-group', function (newDemoGroup) {
+        //     $scope.groups.unshift(newDemoGroup);
+        // })
 
         ThoughtSocket.on('added-new-person', function (newParticipant) {
             console.log('added-new-person', newParticipant);
@@ -118,6 +135,20 @@
     function NewGroupModalController($scope, $modalInstance, groups, GroupsService, UserService) {
         $scope.groups = groups;
 
+        $scope.submitDemo = function () {
+            GroupsService.createDemoGroup({
+                    groupname: $scope.groupname,
+                    ownerId: UserService.user.id,
+                    numParticipants: $scope.numParticipants
+                })
+                .then(function (results) {
+                    $modalInstance.close(results.group);
+                })
+                .catch(function (err) {
+                    $scope.error = err;
+                });
+        };
+
         $scope.submit = function () {
             GroupsService.createGroup({
                     groupname: $scope.groupname,
@@ -126,6 +157,9 @@
                 })
                 .then(function (results) {
                     $modalInstance.close(results.group);
+                })
+                .catch(function (err) {
+                    $scope.error = err;
                 });
         };
 

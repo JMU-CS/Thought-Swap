@@ -242,6 +242,15 @@ function findNameByGroups(groupName, groups) {
 // 	})
 // }
 
+function findGroupInOwnersGroups(i, groupName) {
+  return models.Group.findOne({
+    where: {
+      ownerId: i,
+      name: groupName
+    }
+  });
+}
+
 function findAllGroupsByOwner(i) {
   // console.log('findAllGroupsByOwner', i)
   return models.Group.findAll({
@@ -668,17 +677,42 @@ app.get('/groups/:userId', function (request, response) {
   }
 });
 
+app.post('/demogroups/create', function (request, response) {
+  if (!request.body.hasOwnProperty('group')) {
+    response.status(400).send('Request did not contain any information.');
+  } else {
+    findGroupInOwnersGroups(request.body.group.owner, request.body.group.name)
+    .then(function (group) {
+      if (group === null) {
+      createGroup(request.body.group.name,
+          request.body.group.owner, true)
+        .then(function (group) {
+          bulkCreateParticipants(request.body.group.numParticipants,
+              group.get('id'))
+            .then(function (group) {
+              response.status(200).json({
+                group: group
+              });
+            });
+        })
+      } else {
+        response.status(401).send('Group name already in use');
+      }
+    })
+    .catch(function (err) {
+        console.error('>> Error in create group: ', err);
+        response.status(500).send('Error creating group');
+      });
+  }
+});
+
 app.post('/groups/create', function (request, response) {
   if (!request.body.hasOwnProperty('group')) {
     response.status(400).send('Request did not contain any information.');
   } else {
-    findAllGroupsByOwner(request.body.group.owner)
-    .then(function (groups) {
-      groups.find(function(gg) {
-        if (gg.name === request.body.group.name) {
-          response.status(401).send('You have a group already named', request.body.group.name);
-        }
-      });
+    findGroupInOwnersGroups(request.body.group.owner, request.body.group.name)
+    .then(function (group) {
+      if (group === null) {
       createGroup(request.body.group.name,
           request.body.group.owner, false)
         .then(function (group) {
@@ -690,6 +724,9 @@ app.post('/groups/create', function (request, response) {
               });
             });
         })
+      } else {
+        response.status(401).send('Group name already in use');
+      }
     })
     .catch(function (err) {
         console.error('>> Error in create group: ', err);
@@ -1157,16 +1194,16 @@ io.on('connection', function (socket) {
     createEvent(info);
   });
 
-  socket.on('add-demo-group', function (ownerId) {
-    getUniqueDemoName()
-      .then(function (uniqueDemoName) {
-        createGroup(uniqueDemoName,
-          ownerId, true)
-        .then(function (newDemoGroup) {
-          socket.emit('added-new-demo-group', newDemoGroup);
-        });
-      });
-  });
+  // socket.on('add-demo-group', function (ownerId) {
+  //   getUniqueDemoName()
+  //     .then(function (uniqueDemoName) {
+  //       createGroup(uniqueDemoName,
+  //         ownerId, true)
+  //       .then(function (newDemoGroup) {
+  //         socket.emit('added-new-demo-group', newDemoGroup);
+  //       });
+  //     });
+  // });
 
   socket.on('add-person', function (group) {
     getUniqueSillyname()
