@@ -662,11 +662,11 @@ app.post('/demogroups/create', function (request, response) {
                 });
             })
           } else {
-            response.status(401).send('Name in use by another facilitator.');
+            response.status(401).send('Name in use. Please choose another name.');
           }
         })   
       } else {
-        response.status(401).send('Name in use.');
+        response.status(401).send('Name in use. Please choose another name.');
       }
     })
     .catch(function (err) {
@@ -695,7 +695,7 @@ app.post('/groups/create', function (request, response) {
             });
         })
       } else {
-        response.status(401).send('Group name already in use');
+        response.status(401).send('Name in use. Please choose another name.');
       }
     })
     .catch(function (err) {
